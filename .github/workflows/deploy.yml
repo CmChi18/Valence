@@ -3,6 +3,11 @@ name: deploy
 on:
   push:
     branches: [main]
+    # Docs and CI config do not change the image, so skip the deploy.
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
+      - '.github/**'
   workflow_dispatch:
 
 concurrency:
