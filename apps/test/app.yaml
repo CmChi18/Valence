@@ -1,0 +1,6 @@
+namespace: test
+path: /
+
+static:
+  root: .
+  spa: false
