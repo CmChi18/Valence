@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Valence</title>
+<style>
+  :root {
+    --bg: #0f0f0e;
+    --fg: #e6e3d8;
+    --dim: #8a877c;
+    --line: #2a2a26;
+    --accent: #f0a020;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 48px 24px 72px;
+    background: var(--bg);
+    color: var(--fg);
+    font: 14px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+
+  main { max-width: 900px; margin: 0 auto; }
+
+  h1 { margin: 0; font-size: 24px; font-weight: 500; }
+
+  h2 {
+    margin: 40px 0 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--dim);
+  }
+
+  table { width: 100%; border-collapse: collapse; }
+
+  th, td {
+    text-align: left;
+    padding: 10px 16px 10px 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  th {
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--dim);
+  }
+
+  a { color: var(--accent); }
+  .dim { color: var(--dim); }
+
+  .empty { padding: 24px 0; color: var(--dim); }
+
+  @media (max-width: 640px) {
+    .col-root { display: none; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>Valence</h1>
+
+  <h2>Registered apps (<!--count-->)</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Namespace</th>
+        <th>Mount</th>
+        <th>Path</th>
+        <th class="col-root">Root</th>
+        <th>Mode</th>
+      </tr>
+    </thead>
+    <tbody>
+<!--apps-->
+    </tbody>
+  </table>
+</main>
+</body>
+</html>
