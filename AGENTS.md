@@ -38,7 +38,16 @@ Run both before considering a change done.
 - `Dockerfile` — multi-stage, static binary, runs as non-root on Alpine.
 - `fly.toml` — Fly.io config: 2 shared CPUs, 512 MB, port 8080.
 
+- `apps/<name>/app.yaml` — per-app config.
+- `apps/<name>/<static root>` — the files to serve (default root: `dist`).
+
 ## Deploying
+
+Pushing to `main` deploys automatically via `.github/workflows/deploy.yml`, which
+runs `flyctl deploy --ha=false`, asserts exactly one machine, and smoke-tests the
+live site. The flag is hardcoded there so it cannot be forgotten.
+
+To deploy by hand:
 
 ```sh
 fly deploy --ha=false
@@ -46,12 +55,15 @@ fly deploy --ha=false
 
 `--ha=false` matters: a bare `fly deploy` adds a second machine for zero-downtime
 releases, doubling the footprint to 1 GB. This host is meant to run one machine.
-Always pass it, and confirm afterwards with `fly machine list`.
+Confirm afterwards with `fly machine list`.
 
 `min_machines_running = 0` in `fly.toml` does **not** prevent this; the second
-machine comes from Fly's HA default at deploy time.
-- `apps/<name>/app.yaml` — per-app config.
-- `apps/<name>/<static root>` — the files to serve (default root: `dist`).
+machine comes from Fly's HA default at deploy time. Neither setting can force a
+single machine, which is why the workflow verifies the count after deploying.
+
+The workflow needs a `FLY_API_TOKEN` repo secret, created with
+`fly tokens create deploy -a valence-v1`. Pass the token through verbatim —
+`FlyV1 <macaroon>` contains a space, and stripping it corrupts the token.
 
 ## Master endpoints
 
