@@ -1,0 +1,15 @@
+# Build context hygiene. Nothing here belongs in the image.
+.git
+.gitignore
+.github
+AGENTS.md
+README.md
+fly.toml
+Dockerfile
+.dockerignore
+
+# Local artifacts
+Valence
+*.out
+*.test
+.env
