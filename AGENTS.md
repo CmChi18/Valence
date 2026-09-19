@@ -37,6 +37,19 @@ Run both before considering a change done.
 - `web/robots.txt` — embedded, served at `/robots.txt`.
 - `Dockerfile` — multi-stage, static binary, runs as non-root on Alpine.
 - `fly.toml` — Fly.io config: 2 shared CPUs, 512 MB, port 8080.
+
+## Deploying
+
+```sh
+fly deploy --ha=false
+```
+
+`--ha=false` matters: a bare `fly deploy` adds a second machine for zero-downtime
+releases, doubling the footprint to 1 GB. This host is meant to run one machine.
+Always pass it, and confirm afterwards with `fly machine list`.
+
+`min_machines_running = 0` in `fly.toml` does **not** prevent this; the second
+machine comes from Fly's HA default at deploy time.
 - `apps/<name>/app.yaml` — per-app config.
 - `apps/<name>/<static root>` — the files to serve (default root: `dist`).
 

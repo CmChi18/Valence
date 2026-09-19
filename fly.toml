@@ -1,6 +1,9 @@
 app = "valence-v1"
 primary_region = "iad"
 
+# Deploy with --ha=false. A bare `fly deploy` adds a second machine for
+# zero-downtime releases, which doubles the footprint to 1 GB.
+
 [build]
 
 [env]
