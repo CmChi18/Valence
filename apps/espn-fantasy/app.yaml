@@ -1,6 +1,0 @@
-namespace: espn-fantasy
-path: /
-
-static:
-  root: .
-  spa: false
