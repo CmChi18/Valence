@@ -11,6 +11,16 @@
 # Test binary, built with `go test -c`
 *.test
 
+# Frontend apps: source lives in apps/<name>/, the served output is dist/.
+# Build artifacts are produced by CI/Docker, never committed.
+apps/*/dist/
+apps/*/node_modules/
+node_modules/
+
+# Package manager caches
+.npm/
+.pnpm-store/
+
 # Build output
 /Valence
 

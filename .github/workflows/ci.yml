@@ -13,4 +13,38 @@ jobs:
         with:
           go-version-file: go.mod
       - run: go vet ./...
+      - run: go test ./...
       - run: go run . -check
+
+  # Frontends are built here because `go run . -check` only validates that each
+  # app's static root exists. It cannot tell whether dist/ is current, so a
+  # broken React app would otherwise pass CI green and fail after deploy.
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build apps
+        run: |
+          set -eu
+          found=0
+          for app in apps/*/; do
+            [ -f "$app/package.json" ] || continue
+            found=1
+            echo "::group::build $app"
+            ( cd "$app" && npm ci --no-audit --no-fund && npm run build )
+            echo "::endgroup::"
+          done
+          [ "$found" -eq 1 ] || echo "no frontend apps with package.json"
+
+      # Its own job on purpose: `-check` must see dist/ as CI would ship it.
+      # Needs Go, so run it after the builds in this job.
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Validate configs against built output
+        run: go run . -check

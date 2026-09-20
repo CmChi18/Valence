@@ -396,6 +396,35 @@ func blockedPath(p string) bool {
 	return false
 }
 
+// assetExtensions are the file types a bundler emits under a hashed name. A
+// request for one of these that 404s is a stale or wrong asset reference, never
+// an application route, so it must not fall back to the SPA shell.
+var assetExtensions = map[string]bool{
+	".js": true, ".mjs": true, ".cjs": true,
+	".css": true, ".map": true,
+	".json": true, ".wasm": true, ".txt": true, ".xml": true,
+	".png": true, ".jpg": true, ".jpeg": true, ".gif": true,
+	".svg": true, ".webp": true, ".avif": true, ".ico": true, ".bmp": true,
+	".woff": true, ".woff2": true, ".ttf": true, ".otf": true, ".eot": true,
+	".mp3": true, ".mp4": true, ".webm": true, ".ogg": true, ".wav": true,
+	".pdf": true, ".zip": true, ".gz": true,
+}
+
+// isNavigation reports whether a request should be answered with the SPA shell.
+// Anything under /assets/ is a build artifact by convention, and any path with a
+// known asset extension is a file request regardless of directory.
+func isNavigation(r *http.Request, cleanPath string) bool {
+	if strings.HasPrefix(cleanPath, "/assets/") {
+		return false
+	}
+
+	if ext := strings.ToLower(path.Ext(cleanPath)); ext != "" && assetExtensions[ext] {
+		return false
+	}
+
+	return true
+}
+
 func spaHandler(root string) http.Handler {
 	files := http.FileServer(http.Dir(root))
 
@@ -409,6 +438,23 @@ func spaHandler(root string) http.Handler {
 			files.ServeHTTP(w, r)
 			return
 		}
+
+		// A directory is only serveable via its index; the root directory is a
+		// navigation, not an error. Guard the listing case, nothing else.
+		if err == nil && info.IsDir() && !hasIndex(filePath) {
+			http.NotFound(w, r)
+			return
+		}
+
+		// Only navigations fall back to index.html. A build tool's hashed asset
+		// (e.g. /assets/index-abc123.js) that misses is a 404, not a route: after
+		// a redeploy a stale client would otherwise get index.html with a 200 and
+		// try to execute HTML as JavaScript ("Unexpected token '<'").
+		if !isNavigation(r, cleanPath) {
+			http.NotFound(w, r)
+			return
+		}
+
 		indexPath := filepath.Join(root, "index.html")
 
 		if _, err := os.Stat(indexPath); err != nil {
