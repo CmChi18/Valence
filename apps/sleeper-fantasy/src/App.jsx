@@ -3,7 +3,7 @@ import {
   findLeague,
   loadLeague,
   playersPromise,
-  matchupState,
+  weekState,
   indexUsers,
   indexRosters,
 } from './api'
@@ -18,6 +18,7 @@ export default function App() {
   const [error, setError] = useState(null)
   const [meta, setMeta] = useState(null)
   const [week, setWeek] = useState(1)
+  const [currentWeek, setCurrentWeek] = useState(1)
   const [hasWeek, setHasWeek] = useState(false)
   const [data, setData] = useState(null)
   const [players, setPlayers] = useState(EMPTY)
@@ -35,7 +36,9 @@ export default function App() {
         if (!alive) return
 
         setMeta(m)
-        setWeek(Math.max(1, m.state.display_week || m.state.week || 1))
+        const now = Math.max(1, m.state.display_week || m.state.week || 1)
+        setCurrentWeek(now)
+        setWeek(now)
         setHasWeek(true)
       })
       .catch((e) => alive && setError(e))
@@ -95,7 +98,7 @@ export default function App() {
 
   const rosters = useMemo(() => indexRosters(data?.rosters), [data])
 
-  const state = data ? matchupState(data.matchups) : 'none'
+  const state = data ? weekState(week, currentWeek, data.matchups) : 'none'
 
   const decWeek = useCallback(() => setWeek((w) => Math.max(1, w - 1)), [])
   const incWeek = useCallback(() => setWeek((w) => Math.min(MAX_WEEK, w + 1)), [])
@@ -120,7 +123,13 @@ export default function App() {
               <span className="dim">
                 {' · '}
                 {meta.season} · week {week}
-                {state === 'live' ? ' · in progress' : null}
+                {state === 'live'
+                  ? ' · in progress'
+                  : state === 'complete'
+                    ? ' · complete'
+                    : state === 'upcoming'
+                      ? ' · upcoming'
+                      : null}
               </span>
             ) : null}
           </>
@@ -165,6 +174,7 @@ export default function App() {
                   matchups={data.matchups}
                   rosters={rosters}
                   users={users}
+                  myRosterId={myRoster?.roster_id}
                 />
               </Section>
             </>

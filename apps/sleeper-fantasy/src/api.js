@@ -143,8 +143,10 @@ export async function loadLeague(leagueId, week) {
   return { rosters, users, matchups }
 }
 
-export function matchupState(matchups) {
+export function weekState(week, currentWeek, matchups) {
   if (!matchups?.length) return 'none'
+  if (week < currentWeek) return 'complete'
+  if (week > currentWeek) return 'upcoming'
 
   for (const m of matchups) {
     if ((m.points || 0) > 0) return 'live'

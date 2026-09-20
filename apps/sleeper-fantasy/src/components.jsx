@@ -50,7 +50,7 @@ export function PlayerTable({ players, ids, showTeam = true, bench = false, curr
               <td>{p?.name || id}</td>
               {showTeam ? <td className="col-team dim">{p?.team || ''}</td> : null}
               <td className={`col-bye num ${byeClass}`}>
-                {bye == null ? '—' : onBye ? `${bye} · now` : bye}
+                {bye == null ? '—' : bye}
               </td>
             </tr>
           )
@@ -107,7 +107,13 @@ export function MyTeam({ roster, players, users, week }) {
 
   return (
     <>
-      <Section title={`${teamName(owner)} — starters · week ${week}`}>
+      <Section
+        title={
+          <>
+            <span className="me">{teamName(owner)}</span> — starters · week {week}
+          </>
+        }
+      >
         <PlayerTable players={players} ids={roster.starters || []} currentWeek={week} />
       </Section>
 
@@ -130,7 +136,7 @@ export function MyTeam({ roster, players, users, week }) {
             ['Record', `${s.wins}-${s.losses}${s.ties ? `-${s.ties}` : ''}`],
             ['Points for', fpts(s).toFixed(2)],
             ['Points against', fptsAgainst(s).toFixed(2)],
-            ['Point differential', (fpts(s) - fptsAgainst(s)).toFixed(2)],
+            ['Season differential', (fpts(s) - fptsAgainst(s)).toFixed(2)],
             ['Waiver position', s.waiver_position],
             ['Moves', s.total_moves],
           ]}
@@ -175,10 +181,7 @@ export function Matchup({ roster, matchups, rosters, users, week }) {
         </thead>
         <tbody>
           <tr>
-            <td>
-              {teamName(users.get(roster.owner_id))}{' '}
-              <span className="dim">(you)</span>
-            </td>
+            <td className="me">{teamName(users.get(roster.owner_id))}</td>
             <td className={`num ${lead}`}>{myPts.toFixed(2)}</td>
           </tr>
           <tr>
@@ -212,26 +215,37 @@ export function Standings({ rosters, users, myRosterId }) {
             <th className="num">W-L</th>
             <th className="num">PF</th>
             <th className="num col-team">PA</th>
+            <th className="num">DIFF</th>
           </tr>
         </thead>
         <tbody>
-          {rows.map(({ r, pf, pa }) => (
-            <tr key={r.roster_id} className={r.roster_id === myRosterId ? 'me' : undefined}>
-              <td>{teamName(users.get(r.owner_id))}</td>
-              <td className="num">
-                {r.settings.wins}-{r.settings.losses}
-              </td>
-              <td className="num">{pf.toFixed(2)}</td>
-              <td className="num col-team">{pa.toFixed(2)}</td>
-            </tr>
-          ))}
+          {rows.map(({ r, pf, pa }) => {
+            const diff = pf - pa
+
+            return (
+              <tr key={r.roster_id}>
+                <td className={r.roster_id === myRosterId ? 'me' : undefined}>
+                  {teamName(users.get(r.owner_id))}
+                </td>
+                <td className="num">
+                  {r.settings.wins}-{r.settings.losses}
+                </td>
+                <td className="num">{pf.toFixed(2)}</td>
+                <td className="num col-team">{pa.toFixed(2)}</td>
+                <td className={`num ${diff > 0 ? 'win' : diff < 0 ? 'loss' : 'dim'}`}>
+                  {diff > 0 ? '+' : ''}
+                  {diff.toFixed(2)}
+                </td>
+              </tr>
+            )
+          })}
         </tbody>
       </table>
     </Section>
   )
 }
 
-export function Scoreboard({ matchups, rosters, users }) {
+export function Scoreboard({ matchups, rosters, users, myRosterId }) {
   const pairs = groupMatchups(matchups)
 
   if (!pairs.length) return <p className="empty">No games this week.</p>
@@ -252,7 +266,9 @@ export function Scoreboard({ matchups, rosters, users }) {
           return ms.map((m, i) => (
             <tr key={`${id}-${m.roster_id}`}>
               <td className="dim">{i === 0 ? `#${id}` : ''}</td>
-              <td>{nameForRoster(m.roster_id, rosters, users)}</td>
+              <td className={m.roster_id === myRosterId ? 'me' : undefined}>
+                {nameForRoster(m.roster_id, rosters, users)}
+              </td>
               <td className={`num ${(m.points || 0) === hi && hi > 0 ? 'win' : ''}`}>
                 {(m.points || 0).toFixed(2)}
               </td>
