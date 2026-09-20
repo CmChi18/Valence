@@ -13,3 +13,9 @@ Valence
 *.out
 *.test
 .env
+
+# Frontend deps and build output. node_modules is ~50MB per app; letting it into
+# the build context alone would dwarf the 512MB target.
+apps/*/node_modules/
+apps/*/dist/
+node_modules/

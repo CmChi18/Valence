@@ -5,12 +5,40 @@ on:
   pull_request:
 
 jobs:
-  config:
+  ci:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+
       - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Before the frontends, because these do not need dist/ and failing fast
+      # on Go is cheaper than a full npm install.
       - run: go vet ./...
+      - run: go test ./...
+
+      # dist/ is gitignored, so a fresh checkout has none. `go run . -check`
+      # fails without it, so the frontends must be built before it runs. This is
+      # why build and check share a job rather than being split: jobs do not
+      # share a filesystem, so a separate `config` job could never see dist/.
+      - name: Build frontend apps
+        run: |
+          set -eu
+          found=0
+          for app in apps/*/; do
+            [ -f "$app/package.json" ] || continue
+            found=1
+            echo "::group::build $app"
+            ( cd "$app" && npm ci --no-audit --no-fund && npm run build )
+            echo "::endgroup::"
+          done
+          [ "$found" -eq 1 ] || echo "no frontend apps with package.json"
+
+      # Validates every app config, including that each static root exists in
+      # the built output. Cannot tell whether dist/ is *stale*: build first.
       - run: go run . -check

@@ -1,0 +1,8 @@
+namespace: sleeper-fantasy
+path: /
+
+static:
+  # Vite output. Source lives in src/; dist/ is built by CI/Docker and gitignored.
+  root: dist
+  # Client-side routing: unknown non-asset paths serve index.html.
+  spa: true

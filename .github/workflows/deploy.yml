@@ -57,3 +57,20 @@ jobs:
           wait_for /robots.txt 200
           wait_for /apps/test/ 200
           wait_for /apps/test/app.yaml 404
+
+          # The fantasy app is an SPA built by Vite. Assert the shell, a hashed
+          # asset, and that a stale asset 404s instead of returning HTML.
+          wait_for /apps/sleeper-fantasy/ 200
+
+          asset=$(curl -sS --max-time 20 "https://valence-v1.fly.dev/apps/sleeper-fantasy/" \
+            | grep -o '/apps/sleeper-fantasy/assets/[^"]*\.js' | head -1)
+          if [ -z "$asset" ]; then
+            echo "::error::no hashed JS asset referenced by the SPA shell"
+            exit 1
+          fi
+          echo "asset: $asset"
+          wait_for "$asset" 200
+
+          # Guards the SPA fallback: a missing hashed asset must be a 404. A 200
+          # here means index.html is being served as JavaScript.
+          wait_for /apps/sleeper-fantasy/assets/does-not-exist.js 404
